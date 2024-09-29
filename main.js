@@ -2,22 +2,30 @@ const http = require("http");
 const url = require("url");
 const {Worker} = require('worker_threads');
 const Config = require('./constants.js');
+const {HttpRequestPostData} = require('./interfaces/httpHelper.js');
+const {WorkerData} = require('./interfaces/workerHelper.js');
 
 const HttpServer = http.createServer((req, res) => {
 
     var route_tm_s = Date.now();
-    const route_elapse = (start) => `${Date.now() - start}ms`
+    const route_elapse = (start) => `${Date.now() - start}ms`;
 
-    const handle_route = (worker_name, route_handler)=>{
-        const worker = new Worker(route_handler, {workerData: {config: Config, reqUrl: reqUrl, query: parsed.query}});
+    const handle_route = function (reqUrl, postData, route_handler) {
+
+        // build WorkerData class
+        let workerPostData = new HttpRequestPostData(reqUrl, postData.length > 0 ? JSON.parse(postData) : null);
+        let workerData = new WorkerData(workerPostData);
+        const worker = new Worker(route_handler, {workerData: workerData});
+
         worker.on('message', (result) => {
-            if (result.httpStatus > 299){
-                console.log(Date.now(), `Handle Error: ${reqUrl},`, `code: ${result.httpStatus}`,`msg: ${result.msg}`)
-                res.writeHead(result.httpStatus)
+            if (result.httpStatusCode > 299){
+                console.log(Date.now(), `Handle Error: ${reqUrl},`, `code: ${result.httpStatusCode}`,`msg: ${result.err}`);
+                res.writeHead(result.httpStatusCode);
             }
             else{
-                res.write(result.msg)
-                console.log(Date.now(), `Handle Response: ${reqUrl},`, `elapse: ${route_elapse(route_tm_s)}`)
+                res.writeHead(result.httpStatusCode);
+                res.write(result.data);
+                console.log(Date.now(), `Handle Response: ${reqUrl},`, `elapse: ${route_elapse(route_tm_s)}`);
             }
             res.end()
         })
@@ -40,42 +48,45 @@ const HttpServer = http.createServer((req, res) => {
 
     if (req.method == "POST") {
 
-        route_tm_s = Date.now();
-        console.log(Date.now(), "Handle Request:", reqUrl)
+        let route_tm_s = Date.now();
+        console.log(Date.now(), "Handle Request:", reqUrl);
 
-        switch(String(reqUrl)){
-            
-            case "/mdse/insert":
-                handle_route(reqUrl, "./routes/mdse/insert.js"); 
-                break;
+        let postData = "";
+        req.on("data", function (chunk) {
+            postData += chunk;
+        });
 
-            case "/mdse/update":
-                handle_route(reqUrl, "./routes/mdse/update.js"); 
-                break;
+        req.on("end", function(){
+            switch(String(reqUrl)){
+                
+                case "/mdse/all":
+                    handle_route(reqUrl, postData, "./routes/mdse/all.js"); 
+                    break;
 
-            case "/mdse/delete":
-                handle_route(reqUrl, "./routes/mdse/delete.js"); 
-                break;
+                case "/mdse/insert":
+                    handle_route(reqUrl, postData, "./routes/mdse/insert.js"); 
+                    break;
+        
+                case "/mdse/update":
+                    handle_route(reqUrl, postData, "./routes/mdse/update.js"); 
+                    break;
 
-            case "/mdse/group_list":
-                handle_route(reqUrl, "./routes/mdse/group_list.js"); 
-                break;
-
-            case "/assoc_and_cust/insert":
-                handle_route(reqUrl, "./routes/assoc_and_cust/insert.js"); 
-                break;
-
-            case "/assoc_and_cust/update":
-                handle_route(reqUrl, "./routes/assoc_and_cust/update.js"); 
-                break;
-
-            case "/assoc_and_cust/delete":
-                handle_route(reqUrl, "./routes/assoc_and_cust/delete.js"); 
-                break;
-
-            default: 
-                handle_route_404(reqUrl);
-        }
+                case "/assoc/all":
+                    handle_route(reqUrl, postData, "./routes/assoc/all.js"); 
+                    break;
+        
+                case "/assoc/insert":
+                    handle_route(reqUrl, postData, "./routes/assoc/insert.js"); 
+                    break;
+        
+                case "/assoc/update":
+                    handle_route(reqUrl, postData, "./routes/assoc/update.js"); 
+                    break;
+        
+                default: 
+                    handle_route_404(reqUrl);
+            }
+        });
 
     }
 

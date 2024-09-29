@@ -1,6 +1,8 @@
 const {parentPort, workerData} = require('worker_threads');
 const Sqlite3 = require('sqlite3');
 const Database = new Sqlite3.Database(workerData.config.dbName);
+const {WorkerResult} = require('../../interfaces/workerHelper.js');
+const {dbStripQuotes} = require('../../interfaces/dbHelper.js');
 
 const pkCols = ['id'];
 const setCols = ['group', 'name'];
@@ -10,7 +12,7 @@ let updateCols = [];
 
 // check if has one of setCols key
 setCols.forEach((i, ind)=>{
-    if (workerData.query.hasOwnProperty(i)){
+    if (workerData.httpPostData.data.hasOwnProperty(i)){
         hasSetCols = true;
         updateCols.push(i);
     }
@@ -18,7 +20,7 @@ setCols.forEach((i, ind)=>{
 
 // check if has one of pkCols key
 pkCols.forEach((i, ind)=>{
-    if (workerData.query.hasOwnProperty(i)){
+    if (workerData.httpPostData.data.hasOwnProperty(i)){
         hasPkCols = true;
     }
 });
@@ -32,20 +34,20 @@ if (checkAllKeys){
     let sqlStmt = `UPDATE mdse SET ? WHERE ?;`
     let setStmt = [];
     let whereStmt = [];
-    updateCols.forEach((key)=> setStmt.push(`${key}=${JSON.stringify(workerData.query[key])}`))
-    pkCols.forEach((key)=> whereStmt.push(`${key}=${JSON.stringify(workerData.query[key])}`))
+    updateCols.forEach((key)=> setStmt.push(`${key}=${dbStripQuotes(workerData.httpPostData.data[key])}`));
+    pkCols.forEach((key)=> whereStmt.push(`${key}=${dbStripQuotes(workerData.httpPostData.data[key])}`));
 
     sqlStmt = sqlStmt.replace("?", setStmt.join(","))
                     .replace("?", whereStmt.join(","))
                     .replace("group=", "[group]=");
     //console.log(sqlStmt);
 
-    Database.run(sqlStmt, [], (err, rows) => {
+    Database.run(sqlStmt, [], function (err, rows) {
         if (err) {
-            parentPort.postMessage({httpStatus: 422, msg: `bad query values. ${err}`});
+            parentPort.postMessage(new WorkerResult(422, "bad query values", null));
         }
         else{
-            parentPort.postMessage({httpStatus: 200, msg: rows? JSON.stringify(rows) : ""});
+            parentPort.postMessage(new WorkerResult(200, null, JSON.stringify(workerData.httpPostData.data)));
         }
     });
 }

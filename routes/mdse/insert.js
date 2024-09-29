@@ -1,26 +1,35 @@
 const {parentPort, workerData} = require('worker_threads');
 const Sqlite3 = require('sqlite3');
 const Database = new Sqlite3.Database(workerData.config.dbName);
+const {WorkerResult} = require('../../interfaces/workerHelper.js');
 
 const requiredKeys = ['group', 'name'];
-const requiredValues = workerData.query;
+const requiredValues = workerData.httpPostData.data;
 const sqlStmt = `INSERT INTO mdse ([group], name) VALUES (?,?);`
 
 // check if request contains ([group], name)
-let checkAllKeys = requiredKeys.every((i) => workerData.query.hasOwnProperty(i));
+let checkAllKeys = requiredKeys.every((i) => workerData.httpPostData.data.hasOwnProperty(i));
 if (checkAllKeys){
     let values = [requiredValues.group, requiredValues.name];
-    Database.run(sqlStmt, values, (err, rows) => {
+    
+    // use old school function to access this.lastID
+    Database.run(sqlStmt, values, function (err, rows) {
         if (err) {
-            parentPort.postMessage({httpStatus: 422, msg: "bad query values"});
+            parentPort.postMessage(new WorkerResult(422, "bad query values", null));
         }
         else{
-            parentPort.postMessage({httpStatus: 201, msg: JSON.stringify(rows)});
+            let result = JSON.stringify({
+                id: this.lastID,
+                group: requiredValues.group, 
+                name: requiredValues.name
+            });
+            parentPort.postMessage(new WorkerResult(201, null, result));
         }
     });
+    
 }
 else{
-    parentPort.postMessage({httpStatus: 422, msg: "insert query not complete"});
+    parentPort.postMessage(new WorkerResult(422, "insert query not complete", null));
 }
 
 Database.close();
