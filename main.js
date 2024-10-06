@@ -1,11 +1,17 @@
-const http = require("http");
+const https = require('https');
+const fs = require('fs');
 const url = require("url");
 const {Worker} = require('worker_threads');
 const Config = require('./constants.js');
 const {HttpRequestPostData} = require('./interfaces/httpHelper.js');
 const {WorkerData} = require('./interfaces/workerHelper.js');
 
-const HttpServer = http.createServer((req, res) => {
+const options = {
+    key: fs.readFileSync('./cert/cert.key'),
+    cert: fs.readFileSync('./cert/cert.crt')
+};
+
+const HttpServer = https.createServer(options, (req, res) => {
 
     var route_tm_s = Date.now();
     const route_elapse = (start) => `${Date.now() - start}ms`;
@@ -82,6 +88,18 @@ const HttpServer = http.createServer((req, res) => {
                 case "/assoc/update":
                     handle_route(reqUrl, postData, "./routes/assoc/update.js"); 
                     break;
+
+                case "/price/all":
+                    handle_route(reqUrl, postData, "./routes/price/all.js"); 
+                    break;
+
+                case "/price/insert":
+                    handle_route(reqUrl, postData, "./routes/price/insert.js"); 
+                    break;
+
+                case "/price/history":
+                    handle_route(reqUrl, postData, "./routes/price/history.js"); 
+                    break;
         
                 default: 
                     handle_route_404(reqUrl);
@@ -97,4 +115,4 @@ const HttpServer = http.createServer((req, res) => {
 })
 
 console.log(Date.now(), "Http Server ready to serve request")
-HttpServer.listen(80);
+HttpServer.listen(443, "localhost");

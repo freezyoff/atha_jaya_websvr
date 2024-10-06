@@ -1,5 +1,5 @@
 function dbStripQuotes(str){
-    return JSON.stringify(str).replace("\\\"", "\"\"");
+    return JSON.stringify(str).replace(/\\\"/g, `\"\"`);
 }
 
 module.exports = {dbStripQuotes};

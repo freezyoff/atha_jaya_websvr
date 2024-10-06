@@ -6,10 +6,10 @@ const {dbStripQuotes} = require('../../interfaces/dbHelper.js');
 
 const cols = {
     required: function(){  
-        return ["name", "addr_street", "addr_city", "addr_province", "addr_zip", "phone"] 
+        return ['date', 'assoc_id', 'mdse_id', 'amount'] ;
     },
     all: function(){ 
-        return this.required().concat(["sup_flag", "npwp_nik", "pic_name", "pic_phone"]) 
+        return this.required();
     },
     validate: function(){
         return this.required().every((i) => workerData.httpPostData.data.hasOwnProperty(i));
@@ -28,7 +28,7 @@ if (cols.validate()){
         }
     });
 
-    let sqlStmt = `INSERT INTO assoc (?) VALUES (?);`
+    let sqlStmt = `INSERT INTO assoc_mdse_prices (?) VALUES (?);`
                     .replace("?", colStmt.join(","))
                     .replace("?", valStmt.join(","))
     
@@ -38,10 +38,6 @@ if (cols.validate()){
             parentPort.postMessage(new WorkerResult(422, "bad query values", null));
         }
         else{
-            let result = {id: this.lastID};
-            colStmt.map((obj, idx)=>{
-                result[obj] = valStmt[idx];
-            });
             result = JSON.stringify(workerData.httpPostData.data);
             parentPort.postMessage(new WorkerResult(201, null, result));
         }

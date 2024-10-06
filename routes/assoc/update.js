@@ -1,38 +1,59 @@
 const {parentPort, workerData} = require('worker_threads');
 const Sqlite3 = require('sqlite3');
 const Database = new Sqlite3.Database(workerData.config.dbName);
+const {WorkerResult} = require('../../interfaces/workerHelper.js');
+const {dbStripQuotes} = require('../../interfaces/dbHelper.js');
 
-const setCols = ['npwp_nik', 'name', 'addr', 'phone'];
-const pkCols = ['id'];
-let sqlStmt = `UPDATE assoc_and_cust SET ? WHERE ?;`
+const cols = {
+    required: function(){  
+        return ["id"]
+    },
+    all: function(){ 
+        return this.required().concat([
+            "sup_flag", 
+            "npwp_nik", 
+            "name", 
+            "addr_street", 
+            "addr_city", 
+            "addr_province", 
+            "addr_zip", 
+            "phone", 
+            "pic_name", 
+            "pic_phone"
+        ]) 
+    },
+    validate: function(){
+        return this.required().every((i) => workerData.httpPostData.data.hasOwnProperty(i));
+    }
+}
 
-// required columns ('name', 'addr', 'phone')
-let hasPkCols = pkCols.every((i) => workerData.query.hasOwnProperty(i));
+if (cols.validate()){
+    let sqlStmt = `UPDATE assoc SET ? WHERE ?;`
 
-let checkAllKeys = hasPkCols;
-if (checkAllKeys){
-
-    let stmtCols = [];
-    setCols.forEach((i, ind)=>{
-        if (workerData.query.hasOwnProperty(i)){
-            stmtCols.push(`${i}=${JSON.stringify(workerData.query[i])}`);
+    let setStmt = [];
+    let cc = cols.all();
+    cc.shift();
+    cc.forEach((i, ind)=>{
+        console.log(i, "has =>", workerData.httpPostData.data.hasOwnProperty(i))
+        if (workerData.httpPostData.data.hasOwnProperty(i)){
+            setStmt.push(`${i}=${dbStripQuotes(workerData.httpPostData.data[i])}`);
         }
     });
 
-    let stmtPk = [];
-    pkCols.forEach((i, ind) => {
-        stmtPk.push(`${i}=${JSON.stringify(workerData.query[i])}`);
+    let whereStmt = [];
+    cols.required().forEach((i, ind) => {
+        whereStmt.push(`${i}=${dbStripQuotes(workerData.httpPostData.data[i])}`);
     });
-
-    sqlStmt = sqlStmt.replace("?", stmtCols.join(",")).replace("?", stmtPk.join(","));
-    console.log(sqlStmt);
+    
+    sqlStmt = sqlStmt.replace("?", setStmt.join(",")).replace("?", whereStmt.join(","));
+    console.log(sqlStmt)
 
     Database.run(sqlStmt, [], (err, rows) => {
         if (err) {
-            parentPort.postMessage({httpStatus: 422, msg: `bad query values, ${err}`});
+            parentPort.postMessage(new WorkerResult(422, "bad query values", null));
         }
         else{
-            parentPort.postMessage({httpStatus: 201, msg: JSON.stringify(rows? rows : "")});
+            parentPort.postMessage(new WorkerResult(200, null, JSON.stringify(workerData.httpPostData.data)));
         }
     });
 

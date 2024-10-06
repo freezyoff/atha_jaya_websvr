@@ -40,7 +40,7 @@ if (checkAllKeys){
     sqlStmt = sqlStmt.replace("?", setStmt.join(","))
                     .replace("?", whereStmt.join(","))
                     .replace("group=", "[group]=");
-    //console.log(sqlStmt);
+    // console.log(sqlStmt);
 
     Database.run(sqlStmt, [], function (err, rows) {
         if (err) {
