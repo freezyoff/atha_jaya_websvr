@@ -115,4 +115,6 @@ const HttpServer = https.createServer(options, (req, res) => {
 })
 
 console.log(Date.now(), "Http Server ready to serve request")
-HttpServer.listen(443, "localhost");
+
+let ENV = require('dotenv').config();
+HttpServer.listen(443, ENV.DB_HOST);
