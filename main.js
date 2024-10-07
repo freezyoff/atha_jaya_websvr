@@ -1,4 +1,9 @@
-const https = require('https');
+let ENV = require('dotenv').config().parsed;
+ENV.SECURE = ENV.SECURE=='1' || ENV.SECURE=='true'
+
+const http = ENV.SECURE? require('https') : require('http');
+const httpOptions = {};
+
 const fs = require('fs');
 const url = require("url");
 const {Worker} = require('worker_threads');
@@ -6,12 +11,12 @@ const Config = require('./constants.js');
 const {HttpRequestPostData} = require('./interfaces/httpHelper.js');
 const {WorkerData} = require('./interfaces/workerHelper.js');
 
-const options = {
-    key: fs.readFileSync('./cert/cert.key'),
-    cert: fs.readFileSync('./cert/cert.crt')
-};
+if (ENV.SECURE){
+    httpOptions.key = fs.readFileSync(ENV.SECURE_KEY),
+    httpOptions.cert = fs.readFileSync(ENV.SECURE_CERT)
+}
 
-const HttpServer = https.createServer(options, (req, res) => {
+const HttpServer = http.createServer(httpOptions, (req, res) => {
 
     var route_tm_s = Date.now();
     const route_elapse = (start) => `${Date.now() - start}ms`;
@@ -114,7 +119,5 @@ const HttpServer = https.createServer(options, (req, res) => {
     }
 })
 
-console.log(Date.now(), "Http Server ready to serve request")
-
-let ENV = require('dotenv').config();
-HttpServer.listen(443, ENV.DB_HOST);
+console.log(Date.now(), `Http Server ready to serve request on ${ENV.SECURE? "https://" : "http://"}${ENV.DB_HOST}:${ENV.DB_PORT}`)
+HttpServer.listen(ENV.DB_PORT, ENV.DB_HOST);

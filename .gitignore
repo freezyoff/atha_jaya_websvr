@@ -3,3 +3,4 @@ node_modules/
 *.ppk
 cleanDb.js
 *.db
+package-lock.json
