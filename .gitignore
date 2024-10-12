@@ -1,6 +1,5 @@
 node_modules/
 *.key
 *.ppk
-cleanDb.js
 *.db
 package-lock.json
