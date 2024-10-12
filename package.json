@@ -1,6 +1,16 @@
 {
-  "dependencies": {
-    "dotenv": "^16.4.5",
-    "sqlite3": "^5.1.7"
-  }
+   "scripts": {
+      "start": "node ./main.js",
+      "migration": "node ./lib/migration.js",
+      "test": "mocha",
+      "start-service": "pm2 ./lib/main.js"
+   },
+   "dependencies": {
+      "dotenv": "^16.4.5",
+      "sqlite3": "^5.1.7"
+   },
+   "devDependencies": {
+      "mocha": "^10.7.3",
+      "detect-mocha": "^0.1.0"
+   }
 }
