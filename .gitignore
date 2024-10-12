@@ -3,3 +3,4 @@ node_modules/
 *.ppk
 *.db
 package-lock.json
+.env*
