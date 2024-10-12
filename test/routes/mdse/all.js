@@ -42,7 +42,6 @@ describe(`/all`, ()=>{
             res.on('end', ()=>{  
                assert.equal(200, res.statusCode);
                done();
-               // res.remove('end');
             })
          },
       )
