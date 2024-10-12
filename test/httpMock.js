@@ -1,19 +1,27 @@
-require('dotenv').config();
+const Fs = require('fs');
 
-if (!process.env.PRODUCTION || process.env.PRODUCTION == 'false'){
+console.log("ENV_RUNTIME", process.env.ENV_RUNTIME);
+console.log("HTTP_SECURE", process.env.HTTP_SECURE);
+console.log("HTTP_PRIVATE_KEY", process.env.HTTP_PRIVATE_KEY);
+console.log("HTTP_CERTIFICATE", process.env.HTTP_CERTIFICATE);
+console.log("HTTP_HOST", process.env.HTTP_HOST);
+console.log("HTTP_PORT", process.env.HTTP_PORT);
+console.log("DB_PATH", process.env.DB_PATH);
+console.log("MIGRATION_PATH", process.env.MIGRATION_PATH);
+
+const isSecureHttp = (process.env.HTTP_SECURE === 'true');
+
+const { request } = isSecureHttp ? require('https') : require('http');
+// var request;
+if (isSecureHttp){
    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
-require('dotenv').config();
-const Fs = require('fs');
-
-const isSecureHttp = process.env.HTTP_SECURE == 'true'
-const { request } = isSecureHttp ? require('https') : require('http');
 
 const httpOptions = {};
 if (isSecureHttp) {
-   httpOptions.key = Fs.readFileSync(process.env.HTTP_PRIVATE_KEY),
-      httpOptions.cert = Fs.readFileSync(process.env.HTTP_CERTIFICATE)
+   httpOptions.key = Fs.readFileSync(process.env.HTTP_PRIVATE_KEY);
+   httpOptions.cert = Fs.readFileSync(process.env.HTTP_CERTIFICATE);
 }
 
 const sendMockHttp = (target, data, cbRes, cbReqErr)=>{

@@ -1,4 +1,3 @@
-require('dotenv').config();
 const assert = require('assert');
 const {Server} = require('./../../../lib/http.js');
 const {sendMockHttp, routeString} = require('./../../httpMock.js')

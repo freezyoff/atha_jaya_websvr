@@ -1,16 +1,25 @@
 {
    "scripts": {
-      "start": "node ./main.js",
-      "migration": "node ./lib/migration.js",
-      "test": "mocha",
-      "start-service": "pm2 ./lib/main.js"
+      "app:start": "npm run migration:install && node --env-file=.env ./main.js",
+      
+      "service:start": "npm run migration:install && pm2 start ./main.js --name athajaya --node-args \"--env-file=./.env\"",
+      "service:stop": "pm2 stop athajaya",
+      "service:restart": "npm run service:stop && npm run service:start",
+      "service:install": "npm run service:start && pm2 save",
+      "service:uninstall": "npm run service:stop && pm2 delete athajaya && pm2 save",
+
+      "migration:status": "node --env-file=.env ./lib/migration.js status",
+      "migration:install": "node --env-file=.env ./lib/migration.js migrate",
+      "migration:rollback": "node --env-file=.env ./lib/migration.js rollback ",
+
+      "test:suite": "npm run test:migration:install && node --env-file=.env.test ./node_modules/mocha/bin/mocha ./test/test.js && npm run test:migration:rollback",
+      "test:migration:install": "node --env-file=.env.test ./lib/migration.js migrate",
+      "test:migration:rollback": "node --env-file=.env.test ./lib/migration.js rollback all"
    },
    "dependencies": {
-      "dotenv": "^16.4.5",
       "sqlite3": "^5.1.7"
    },
    "devDependencies": {
-      "mocha": "^10.7.3",
-      "detect-mocha": "^0.1.0"
+      "mocha": "^10.7.3"
    }
 }

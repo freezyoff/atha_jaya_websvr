@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { Server } = require('./../../lib/http.js');
 const assert = require('assert');
 const http = require('http');

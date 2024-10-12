@@ -1,4 +1,3 @@
-require('dotenv').config();
 const assert = require('assert');
 const {TbMdse} = require('./../../lib/db');
 

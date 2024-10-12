@@ -1,6 +1,6 @@
 node_modules/
+database/*
 *.key
 *.ppk
-*.db
+*.db*
 package-lock.json
-.env*
