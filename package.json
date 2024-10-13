@@ -11,6 +11,7 @@
       "migration:status": "node --env-file=.env ./lib/migration.js status",
       "migration:install": "node --env-file=.env ./lib/migration.js migrate",
       "migration:rollback": "node --env-file=.env ./lib/migration.js rollback ",
+      "migration:template": "node --env-file=.env ./lib/migration.js template",
 
       "test:suite": "npm run test:migration:install && node --env-file=.env.test ./node_modules/mocha/bin/mocha ./test/test.js && npm run test:migration:rollback",
       "test:migration:install": "node --env-file=.env.test ./lib/migration.js migrate",

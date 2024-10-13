@@ -30,4 +30,12 @@ describe('Test Http Routes', function () {
 
    })
 
+   describe(`Test Route ${routeString("/uom")}`, ()=>{
+
+      require('./uom/all.js');
+      // require('./uom/history.js');
+      // require('./uom/insert.js');
+
+   })
+
 });
