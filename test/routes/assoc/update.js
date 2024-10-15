@@ -113,9 +113,9 @@ describe("/update", () => {
                done();
             })
          },
-         (err) => {
-            console.log(err);
-         },
+         // (err) => {
+         //    console.log(err);
+         // },
       )
    });
 })

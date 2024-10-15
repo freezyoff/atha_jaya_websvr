@@ -30,12 +30,13 @@ async function up() {
          INSERT INTO ${tableName} 
             (abbr, is_base, ref_base, conversion, desc)
          VALUES 
-            ('pcs',     1,    'pcs',   1,       'piece(s) atau biji'),
-            ('lusin',   0,    'pcs',   12,      'dozen atau lusin = 12 pcs'),
-            ('kodi',    0,    'pcs',   20,      'kodi = 20 pcs'),
-            ('mg',      1,    null,    1,       'mili gram'),
-            ('g',       0,    'mg',    1000,    'gram'),
-            ('kg',      0,    'mg',    1000000, 'kilo gram')
+            ('pcs',     1,    NULL,    1,          'piece(s) atau biji'),
+            ('lusin',   0,    'pcs',   12,         'dozen atau lusin = 12 pcs'),
+            ('kodi',    0,    'pcs',   20,         'kodi = 20 pcs'),
+            ('mg',      1,    null,    1,          'mili gram'),
+            ('g',       0,    'mg',    1000,       'gram'),
+            ('kg',      0,    'mg',    1000000,    'kilo gram'),
+            ('t',       0,    'mg',    1000000000, 'Ton (Tonne Metric)')
          ;
       `
 

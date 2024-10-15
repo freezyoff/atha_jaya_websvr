@@ -21,17 +21,14 @@ describe("class TbPrice", ()=>{
    });
 
    it(`all columns`, (done)=>{
-      const withPK = [
-         TbPrice.keyDate,
-         TbPrice.keyMdseId,
-         TbPrice.keyAssocId,
-         TbPrice.keyAmmount
-      ];
       const withoutPK = [
          TbPrice.keyMdseId,
          TbPrice.keyAssocId,
-         TbPrice.keyAmmount
+         TbPrice.keyAmmount,
+         TbPrice.keyWeight,
+         TbPrice.keyWeightUomAbbr
       ];
+      const withPK = [TbPrice.keyDate].concat(withoutPK);
       assert.equal(TbPrice.allColumns().length, withPK.length);
       assert.deepEqual(TbPrice.allColumns(), withPK);
       assert.equal(TbPrice.allColumns(false).length, withoutPK.length);

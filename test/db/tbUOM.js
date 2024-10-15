@@ -2,7 +2,6 @@ const assert = require('assert');
 const {TbUOM} = require('./../../lib/db.js');
 
 describe("class TbUOM", ()=>{
-   console.log("TbUOM", TbUOM.allColumns());
 
    it(`primary keys`, (done)=>{
       assert.equal(TbUOM.primaryKeyColumns().length, 1);
