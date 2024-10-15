@@ -2,6 +2,7 @@ const assert = require('assert');
 const { Server } = require('./../../../lib/http.js');
 const { sendMockHttp, routeString } = require('./../../httpMock.js')
 const { dbRun, TbAssoc, dbQuotes } = require('./../../../lib/db.js');
+const { isDefined } = require('../../../lib/utils.js');
 
 function createMockData(howMany) {
    let sql = `INSERT INTO assoc (${TbAssoc.allColumns(false).join(",")}) VALUES ?;`;
@@ -75,31 +76,29 @@ describe("/update", () => {
       )
    });
 
-   it(`with complete data should return 201 & json data`, function (done) {
-      this.timeout(10000);
-      const mockNumber = 999999999;
+   it(`with complete data should return 200 & json data`, function (done) {
+      this.timeout(5000);
       let mockData = {};
-      mockData[TbAssoc.keyId] = 3;
-      mockData[TbAssoc.keyName] = 'new name';
-      mockData[TbAssoc.keyAddrStreet] = "new street";
-      mockData[TbAssoc.keyAddrCity] = "new city";
-      mockData[TbAssoc.keyAddrProvince] = "new province";
-      mockData[TbAssoc.keyAddrZip] = mockNumber;
-      mockData[TbAssoc.keyPhone] = mockNumber;
+      mockData[TbAssoc.keyName] = 'name';
+      mockData[TbAssoc.keyAddrStreet] = "street";
+      mockData[TbAssoc.keyAddrCity] = "city";
+      mockData[TbAssoc.keyAddrProvince] = "province";
+      mockData[TbAssoc.keyAddrZip] = 1234567890;
+      mockData[TbAssoc.keyPhone] = 1234567890;
       mockData[TbAssoc.keySupplierFlag] = 1;
-      mockData[TbAssoc.keyNpwpOrNik] = mockNumber;
-      mockData[TbAssoc.keyPicName] = "new pic name";
-      mockData[TbAssoc.keyPicPhone] = mockNumber;
+      mockData[TbAssoc.keyNpwpOrNik] = 1234567890;
+      mockData[TbAssoc.keyPicName] = "pic name";
+      mockData[TbAssoc.keyPicPhone] = "1234567890";
 
       sendMockHttp(
-         routeString("/assoc/update"),
-         JSON.stringify(mockData),
-         (res) => {
+         routeString("/assoc/insert"), 
+         JSON.stringify(mockData), 
+         (res)=>{
             let data = "";
-            res.on('data', (chunk) => { data += chunk });
-            res.on('end', () => {
+            res.on('data', (chunk)=>{ data += chunk });
+            res.on('end', ()=>{  
                const json = JSON.parse(data);
-               assert.equal(json[TbAssoc.keyId], mockData[TbAssoc.keyId]);
+               assert.notEqual(json.id, null);
                assert.equal(json[TbAssoc.keyName], mockData[TbAssoc.keyName]);
                assert.equal(json[TbAssoc.keyAddrStreet], mockData[TbAssoc.keyAddrStreet]);
                assert.equal(json[TbAssoc.keyAddrProvince], mockData[TbAssoc.keyAddrProvince]);
@@ -109,13 +108,52 @@ describe("/update", () => {
                assert.equal(json[TbAssoc.keyNpwpOrNik], mockData[TbAssoc.keyNpwpOrNik]);
                assert.equal(json[TbAssoc.keyPicName], mockData[TbAssoc.keyPicName]);
                assert.equal(json[TbAssoc.keyPicPhone], mockData[TbAssoc.keyPicPhone]);
-               assert.equal(200, res.statusCode);
-               done();
+               assert.equal(201, res.statusCode);
+               
+               mockData[TbAssoc.keyId] = json.id;
+               for(var key of TbAssoc.allColumns(false)){
+                  switch(key){
+                     case TbAssoc.keyAddrZip:
+                     case TbAssoc.keyNpwpOrNik:
+                     case TbAssoc.keyPhone:
+                     case TbAssoc.keyPicPhone:
+                        mockData[key] += " 0909";
+                        break;
+
+                     case TbAssoc.keySupplierFlag:
+                        break;
+                        
+                     default:
+                        mockData[key] += " changed";
+                  }
+               }
+
+               sendMockHttp(
+                  routeString("/assoc/update"),
+                  JSON.stringify(mockData),
+                  (res) => {
+                     let data = "";
+                     res.on('data', (chunk) => { data += chunk });
+                     res.on('end', () => {
+                        const json = JSON.parse(data);
+                        assert.equal(json[TbAssoc.keyId], mockData[TbAssoc.keyId]);
+                        assert.equal(json[TbAssoc.keyName], mockData[TbAssoc.keyName]);
+                        assert.equal(json[TbAssoc.keyAddrStreet], mockData[TbAssoc.keyAddrStreet]);
+                        assert.equal(json[TbAssoc.keyAddrProvince], mockData[TbAssoc.keyAddrProvince]);
+                        assert.equal(json[TbAssoc.keyAddrZip], mockData[TbAssoc.keyAddrZip]);
+                        assert.equal(json[TbAssoc.keyPhone], mockData[TbAssoc.keyPhone]);
+                        assert.equal(json[TbAssoc.keySupplierFlag], mockData[TbAssoc.keySupplierFlag]);
+                        assert.equal(json[TbAssoc.keyNpwpOrNik], mockData[TbAssoc.keyNpwpOrNik]);
+                        assert.equal(json[TbAssoc.keyPicName], mockData[TbAssoc.keyPicName]);
+                        assert.equal(json[TbAssoc.keyPicPhone], mockData[TbAssoc.keyPicPhone]);
+                        assert.equal(200, res.statusCode);
+                        done();
+                     })
+                  },
+               )
             })
          },
-         // (err) => {
-         //    console.log(err);
-         // },
       )
+
    });
 })

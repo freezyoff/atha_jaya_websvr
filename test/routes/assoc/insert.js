@@ -86,9 +86,6 @@ describe("/insert", ()=>{
                done();
             })
          },
-         // (err)=>{
-         //    console.log(err);
-         // },
       )
    });
 })
