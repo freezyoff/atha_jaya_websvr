@@ -1,169 +1,45 @@
-const { Server } = require('./../../../lib/http.js');
 const assert = require('assert');
-const { sendMockHttp, routeString } = require('./../../httpMock.js')
-const { dbRun, TbAssoc, TbPrice } = require('./../../../lib/db.js')
+const { routeString, sendMockHttpSync } = require('./../../httpMock.js');
+const Crypto = require('crypto');
+const TbPrice = require('../../../lib/db/tbPrice.js');
 
-function createMockMdseData(howMany) {
-   return new Promise((resolve, reject)=>{
-      let sql = `INSERT INTO mdse ([group], name) VALUES ?;`;
-      let values = [];
-      for (var i = 0; i < howMany; i++) {
-         values.push(`('group ${i}', 'name ${i}')`);
-      }
-      sql = sql.replace("?", values.join(","));
-      dbRun(sql, (err, rows) => {
-         resolve(true)
-      });
-   })
-}
-
-function createMockAssocData(howMany) {
-   return new Promise((resolve, reject)=>{
-      const cols = TbAssoc.allColumns();
-      let sql = `INSERT INTO assoc (${cols.join(",")}) VALUES ?;`;
-      let values = [];
-      for (var i = 0; i < howMany; i++) {
-         let rows = [];
-         for (var idx in cols) {
-            rows.push(`'${cols[idx]} ${i}'`);
-         }
-         values.push(`(${rows.join(",")})`);
-      }
-      sql = sql.replace("?", values.join(","));
-      dbRun(sql, (err) => {
-         resolve(true)
-      });
-   })
-}
-
-function createMockData(howMany) {
-   return new Promise((resolve, reject)=>{
-      const cols = TbPrice.allColumns();
-      let sql = `INSERT INTO assoc_mdse_prices (${cols.join(",")}) VALUES ?;`;
-      let values = [];
-      for (var i = 0; i < howMany; i++) {
-         let rows = [];
-         for (var idx in cols) {
-            if (cols[idx] == TbPrice.keyDate) {
-               rows.push(new Date().getTime());
-            }
-            else if (cols[idx] == TbPrice.keyAmmount) {
-               rows.push(Math.round(Math.random() * 1000));
-            }
-            else {
-
-               rows.push(Math.floor(Math.random() * (howMany - 1 + 1) + 1));
-            }
-         }
-         values.push(`(${rows.join(",")})`);
-      }
-      sql = sql.replace("?", values.join(","));
-      // console.log(sql);
-      dbRun(sql, (err)=>{
-         resolve(true)
-      });
-   })
-}
-
-function clearMdse(){
-   return new Promise((resolve, reject)=>{
-      dbRun(`DELETE FROM assoc;`, ()=>{
-         resolve(true);
-      });
-   })
-}
-
-function clearAssoc(){
-   return new Promise((resolve, reject)=>{
-      dbRun(`DELETE FROM mdse;`, ()=>{
-         resolve(true);
-      });
-   })
-}
-
-function clearPrice(){
-   return new Promise((resolve, reject)=>{
-      dbRun(`DELETE FROM assoc_mdse_prices;`, ()=>{
-         resolve(true);
-      });
-   })
-}
-
-function resetAutoIncreament(){
-   return new Promise((resolve, reject)=>{
-      dbRun(`DELETE from sqlite_sequence where name in ('assoc', 'mdse', 'assoc_mdse_prices');`, ()=>{
-         resolve(true)
-      });
-   })
-}
-
-const mockDataLen = 5;
+let priceList = [];
 
 describe(`/history`, () => {
 
-   before(async function () {
-      await createMockMdseData(mockDataLen);
-      await createMockAssocData(mockDataLen);
-      await createMockData(mockDataLen);
-      Server.listen();
-   });
-
-   after(async function () {
-      Server.stop();
-      await clearMdse();
-      await clearAssoc();
-      await clearPrice();
-      await resetAutoIncreament();
+   before(async () => {
+      priceList = await TbPrice.allSync();
    });
 
    it(`with no data should return 417`, function (done) {
-      this.timeout(10000)
-      sendMockHttp(
-         routeString("/price/history"),
-         null,
-         (res) => {
-            let data = "";
-            res.on('data', (chunk) => { data += chunk });
-            res.on('end', () => {
-               assert.equal(417, res.statusCode);
-               done();
-            })
-         },
-      )
+      // let tmp = priceList[Crypto.randomInt(0, priceList.length-1)];
+      // let data = {};
+      // data[TbPrice.keyAssocId] = tmp[TbPrice.keyAssocId];
+      // data[TbPrice.keyMdseId] = tmp[TbPrice.keyMdseId];
+      sendMockHttpSync(routeString("/price/history"), null).then(http => {
+         assert.equal(417, http.response.statusCode);
+         done();
+      });
    });
 
    it(`with any data should return 200`, function (done) {
-      this.timeout(10000)
-      sendMockHttp(
-         routeString("/price/history"),
-         "",
-         (res) => {
-            let data = "";
-            res.on('data', (chunk) => { data += chunk });
-            res.on('end', () => {
-               assert.equal(417, res.statusCode);
-               done();
-            })
-         },
-      )
+      sendMockHttpSync(routeString("/price/history"), {}).then(http => {
+         assert.equal(417, http.response.statusCode);
+         done();
+      });
    });
 
    it(`with complete data should return 200 & json data`, function (done) {
-      this.timeout(10000)
-      sendMockHttp(
-         routeString("/price/all"),
-         JSON.stringify({"mdse_id":1, "assoc_id":1}),
-         (res) => {
-            let data = "";
-            res.on('data', (chunk) => { data += chunk });
-            res.on('end', () => {
-               const json = JSON.parse(data);
-               assert.notEqual(data, null);
-               assert.notEqual(data, undefined);
-               assert.equal(200, res.statusCode);
-               done();
-            })
-         }
-      );
+      let priceRef = priceList[Crypto.randomInt(0, priceList.length - 1)];
+      let tmp = {};
+      tmp[TbPrice.keyAssocId] = priceRef.assoc.id;
+      tmp[TbPrice.keyMdseId] = priceRef.mdse.id;
+      sendMockHttpSync(routeString("/price/history"), tmp).then(http => {
+         const json = JSON.parse(http.responseData);
+         assert.notEqual(json, null);
+         assert.notEqual(json, undefined);
+         assert.equal(200, http.response.statusCode);
+         done();
+      });
    })
 })

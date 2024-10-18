@@ -1,76 +1,37 @@
 const assert = require('assert');
-const {Server} = require('./../../../lib/http.js');
-const {sendMockHttp, routeString} = require('./../../httpMock.js')
-const {dbRun} = require('./../../../lib/db.js');
-
-function clearMockData(){
-   dbRun(`DELETE FROM mdse`);
-   dbRun(`delete from sqlite_sequence where name='mdse';`);
-}
+const {routeString, sendMockHttpSync} = require('./../../httpMock.js')
+const Crypto = require('crypto');
+const TbMdse = require('../../../lib/db/tbMdse.js');
 
 describe("/insert", ()=>{
-      
-   before(function () {
-      clearMockData();
-      Server.listen();
-   });
-
-   after(function () {
-      Server.stop();
-      clearMockData();
-   });
 
    it(`with no data should return 417`, function (done) {
-      sendMockHttp(
-         routeString("/mdse/insert"), 
-         null, 
-         (res)=>{
-            let data = "";
-            res.on('data', (chunk)=>{ data += chunk });
-            res.on('end', ()=>{  
-               assert.equal(417, res.statusCode);
-               done();
-            })
-         },
-
-      )
+      sendMockHttpSync(routeString("/mdse/insert"), null).then(http =>{
+         assert.equal(417, http.response.statusCode);
+         done();
+      })
    });
 
    it(`with incomplete data should return 417`, function (done) {
-      sendMockHttp(
-         routeString("/mdse/insert"), 
-         JSON.stringify({'group':'aaa'}), 
-         (res)=>{
-            let data = "";
-            res.on('data', (chunk)=>{ data += chunk });
-            res.on('end', ()=>{  
-               assert.equal(417, res.statusCode);
-               done();
-            })
-         },
-      )
+      sendMockHttpSync(routeString("/mdse/insert"), null).then(http =>{
+         assert.equal(417, http.response.statusCode);
+         done();
+      })
    });
 
    it(`with complete data should return 201 & json data`, function (done) {
-      this.timeout(5000);
-      sendMockHttp(
-         routeString("/mdse/insert"), 
-         JSON.stringify({'group':'group aaa', 'name': 'aaa'}), 
-         (res)=>{
-            let data = "";
-            res.on('data', (chunk)=>{ data += chunk });
-            res.on('end', ()=>{  
-               const json = JSON.parse(data);
-               assert.notEqual(json.id, null);
-               assert.notEqual(json.name, null);
-               assert.notEqual(json.group, null);
-               assert.equal(201, res.statusCode);
-               done();
-            })
-         },
-         // (err)=>{
-         //    console.log(err);
-         // },
-      )
+      let tmp = {};
+      tmp[TbMdse.keyName] = Crypto.randomBytes(4).toString('hex');
+      tmp[TbMdse.keyGroup] = Crypto.randomBytes(4).toString('hex');
+      sendMockHttpSync(routeString("/mdse/insert"), tmp).then(http=>{
+         const json = JSON.parse(http.responseData);
+         assert.notEqual(json.id, null);
+         assert.notEqual(json.name, null);
+         assert.notEqual(json.group, null);
+         assert.equal(json[TbMdse.keyName], tmp[TbMdse.keyName]);
+         assert.equal(json[TbMdse.keyGroup], tmp[TbMdse.keyGroup]);
+         assert.equal(201, http.response.statusCode);
+         done();
+      })
    });
 })

@@ -1,4 +1,5 @@
 const Fs = require('fs');
+const { isObject, isArray } = require('../lib/utils');
 
 console.log("ENV_RUNTIME", process.env.ENV_RUNTIME);
 console.log("HTTP_SECURE", process.env.HTTP_SECURE);
@@ -24,9 +25,18 @@ if (isSecureHttp) {
    httpOptions.cert = Fs.readFileSync(process.env.HTTP_CERTIFICATE);
 }
 
+/**
+ * 
+ * @param {String} target - url target
+ * @param {Object | String} data - json data to send
+ * @param {Closure} cbRes - callback function(response)
+ * @param {*} cbReqErr - callback function(error)
+ */
 const sendMockHttp = (target, data, cbRes, cbReqErr)=>{
-   // console.log("sendMockHttp:", target);
    const hasData = data? true : false;
+   if (hasData && isObject(data)){
+      data = JSON.stringify(data);
+   }
    const postOpt = {
       host: process.env.HTTP_HOST,
       port: process.env.HTTP_PORT,
@@ -34,7 +44,7 @@ const sendMockHttp = (target, data, cbRes, cbReqErr)=>{
       method: 'POST',
       headers: {
          'Content-Type': 'application/json',
-         'Content-Length': data? data.length : 0
+         'Content-Length': hasData? data.length : 0
       }
    };
 
@@ -57,9 +67,30 @@ const sendMockHttp = (target, data, cbRes, cbReqErr)=>{
    req.end();
 }
 
+/**
+ * 
+ * @param {string} target - url target
+ * @param {Object | String} data 
+ * @returns Http Response Object & Response data or error
+ */
+function sendMockHttpSync (target, data){
+   return new Promise(resolve => {
+      sendMockHttp(
+         target, 
+         data, 
+         response=>{
+            let responseData = "";
+            response.on('data', chunk=>{ responseData += chunk });
+            response.on('end', ()=>{ resolve({response, responseData}); })
+         }, 
+         err=>{ resolve(err); }
+      );
+   });
+}
+
 function routeString(str){
    var protocol = isSecureHttp? 'https' : 'http';
    return `${protocol}://${process.env.HTTP_HOST}:${process.env.HTTP_PORT}${str}`
 }
 
-module.exports = {sendMockHttp, routeString};
+module.exports = {sendMockHttp, sendMockHttpSync, routeString};

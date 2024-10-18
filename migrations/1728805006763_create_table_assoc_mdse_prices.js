@@ -7,12 +7,12 @@ async function up() {
    return new Promise((resolve, reject)=>{
       let sql = `
          CREATE TABLE IF NOT EXISTS ${tableName} (
-            date              INTEGER PRIMARY KEY,
+            date              INTEGER NOT NULL PRIMARY KEY,
             assoc_id          INTEGER NOT NULL REFERENCES assoc (id),
             mdse_id           INTEGER NOT NULL REFERENCES mdse (id),
             amount            REAL    NOT NULL,
-            weight            REAL    NULL,
-            weight_uom_abbr   TEXT    NULL,
+            weight            REAL    NOT NULL,
+            weight_uom_abbr   TEXT    NOT NULL,
             FOREIGN KEY (weight_uom_abbr) REFERENCES uom(abbr)
          );
       `
