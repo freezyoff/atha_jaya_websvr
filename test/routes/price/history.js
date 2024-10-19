@@ -8,7 +8,7 @@ let priceList = [];
 describe(`/history`, () => {
 
    before(async () => {
-      priceList = await TbPrice.allSync();
+      priceList = await TbPrice.latestPricesSync();
    });
 
    it(`with no data should return 417`, function (done) {

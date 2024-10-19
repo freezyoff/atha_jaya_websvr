@@ -30,7 +30,7 @@ describe('Test Http Routes', function () {
    })
 
    describe(`Test Route ${routeString("/price")}`, ()=>{
-      require('./price/all.js');
+      require('./price/latestPrices.js');
       require('./price/insert.js');
       require('./price/history.js');
    })

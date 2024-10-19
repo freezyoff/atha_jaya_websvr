@@ -26,6 +26,9 @@ describe(`/insert`, () => {
    });
 
    it(`with any data should return 417`, function (done) {
+      var tmp = {};
+      tmp[TbPrice.keyWeight] = 10;
+      tmp[TbPrice.keyWeightUomAbbr] = 'mg';
       sendMockHttpSync(routeString("/price/insert"), {}).then( http =>{
          assert.equal(417, http.response.statusCode);
          done();

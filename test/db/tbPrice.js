@@ -32,8 +32,6 @@ describe("class TbPrice", () => {
          TbPrice.keyMdseId,
          TbPrice.keyAssocId,
          TbPrice.keyAmmount,
-         TbPrice.keyWeight,
-         TbPrice.keyWeightUomAbbr
       ];
       assert.equal(TbPrice.requiredColumns().length, required.length);
       assert.deepEqual(TbPrice.requiredColumns(), required);
@@ -56,8 +54,8 @@ describe("class TbPrice", () => {
       done();
    });
 
-   it(`all()`, done => {
-      TbPrice.all(result => {
+   it(`latestPrices()`, done => {
+      TbPrice.latestPrices(result => {
          if (isDbError(result)) throw result;
          assert.equal(typeof result, 'object');
          assert.notEqual(0, result.length);
@@ -65,8 +63,8 @@ describe("class TbPrice", () => {
       });
    });
 
-   it(`allSync()`, done => {
-      TbPrice.allSync().then(result => {
+   it(`latestPricesSync()`, done => {
+      TbPrice.latestPricesSync().then(result => {
          if (isDbError(result)) throw result;
          assert.equal(typeof result, 'object');
          assert.notEqual(0, result.length);
