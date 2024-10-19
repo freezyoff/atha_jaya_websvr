@@ -33,6 +33,7 @@ describe('Test Http Routes', function () {
       require('./price/latestPrices.js');
       require('./price/insert.js');
       require('./price/history.js');
+      require('./price/delete.js');
    })
 
 });

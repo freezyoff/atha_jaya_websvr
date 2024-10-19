@@ -238,49 +238,88 @@ describe("class TbPrice", () => {
 
    describe("history()", () => {
 
-      it("with complete required columns", done=>{
+      it("with complete required columns", done => {
          let price = priceList[Crypto.randomInt(0, priceList.length - 1)];
          let tmp = {};
          tmp[TbPrice.keyAssocId] = price[TbPrice.keyAssocId];
          tmp[TbPrice.keyMdseId] = price[TbPrice.keyMdseId];
-         TbPrice.history(tmp, result=>{
+         TbPrice.history(tmp, result => {
             assert.equal(false, isDbError(result));
             assert.equal(typeof result, 'object');
             done();
          });
       })
 
-      it("with incomplete required columns", done=>{
+      it("with incomplete required columns", done => {
          let price = priceList[Crypto.randomInt(0, priceList.length - 1)];
          let tmp = {};
-         TbPrice.history(tmp, result=>{
+         TbPrice.history(tmp, result => {
             assert.equal(true, isDbError(result));
             done();
          });
       })
-      
+
    });
 
-   describe (`historySync()`, ()=>{
-      it("with complete required columns", done=>{
+   describe(`historySync()`, () => {
+      it("with complete required columns", done => {
          let price = priceList[Crypto.randomInt(0, priceList.length - 1)];
          let tmp = {};
          tmp[TbPrice.keyAssocId] = price[TbPrice.keyAssocId];
          tmp[TbPrice.keyMdseId] = price[TbPrice.keyMdseId];
-         TbPrice.historySync(tmp).then(result=>{
+         TbPrice.historySync(tmp).then(result => {
             assert.equal(false, isDbError(result));
             assert.equal(typeof result, 'object');
             done();
          });
       })
 
-      it("with incomplete required columns", done=>{
+      it("with incomplete required columns", done => {
          let price = priceList[Crypto.randomInt(0, priceList.length - 1)];
          let tmp = {};
-         TbPrice.historySync(tmp).then(result=>{
+         TbPrice.historySync(tmp).then(result => {
             assert.equal(true, isDbError(result));
             done();
          });
       })
    });
+
+   describe(`delete()`, () => {
+      it("with complete required columns", done => {
+         let price = priceList[Crypto.randomInt(0, priceList.length - 1)];
+         let tmp = {};
+         TbPrice.delete(price, result => {
+            assert.equal(false, isDbError(result));
+            // assert.equal(true, isDefined(result.changes));
+            done();
+         });
+      });
+
+      it("with incomplete required columns", done => {
+         TbPrice.delete({}, result => {
+            assert.equal(true, isDbError(result));
+            done();
+         });
+      })
+   });
+
+   describe(`delete()`, () => {
+      it("with complete required columns", done => {
+         let price = priceList[Crypto.randomInt(0, priceList.length - 1)];
+         let tmp = {};
+         TbPrice.deleteSync(price).then(result => {
+            assert.equal(false, isDbError(result));
+            // assert.equal(true, isDefined(result.changes));
+            done();
+         });
+      });
+
+      it("with incomplete required columns", done => {
+         TbPrice.deleteSync({}).then(result => {
+            assert.equal(true, isDbError(result));
+            done();
+         });
+      })
+   });
+
 });
